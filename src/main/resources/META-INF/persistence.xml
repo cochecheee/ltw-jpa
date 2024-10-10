@@ -5,6 +5,9 @@
  https://jakarta.ee/xml/ns/persistence/persistence_3_0.xsd"
 	version="3.0">
 	<persistence-unit name="dataSource">
+		<class>com.java.project.entity.Category</class>
+		<class>com.java.project.entity.Video</class>
+		
 		<properties>
 			<property name="jakarta.persistence.jdbc.url"
 				value="jdbc:sqlserver://localhost:1433;databaseName=jpa" />
