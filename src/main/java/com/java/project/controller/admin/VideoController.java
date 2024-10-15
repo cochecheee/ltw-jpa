@@ -44,13 +44,13 @@ public class VideoController extends HttpServlet {
 		String url = req.getRequestURI();
 		IVideoService vidService = new VideoService();
 		ICategoryService cateService = new CategoryService();
-		
+
 		if (url.contains("/admin/videos")) {
 			List<Video> list = vidService.findAll();
 			req.setAttribute("listvideo", list);
 			req.getRequestDispatcher("/views/admin/video-list.jsp").forward(req, resp);
 		}
-		
+
 	}
 
 	@Override
@@ -65,15 +65,65 @@ public class VideoController extends HttpServlet {
 		if (url.contains("/admin/video/processing")) {
 			String buttonName = req.getParameter("btnsubmit");
 			System.out.println(buttonName);
-			if(buttonName.equals("Create")) {
+			if (buttonName.equals("Create")) {
 				Video vid = new Video();
-				
+
 				String id = req.getParameter("videoid");
 				int active = Integer.parseInt(req.getParameter("status"));
 				String description = req.getParameter("description");
 				String title = req.getParameter("videotitle");
 				int views = Integer.parseInt(req.getParameter("views"));
-				
+
+				String categoryname = req.getParameter("categoryname");
+				List<Category> list = cateService.findByCategoryname(categoryname);
+				Category cate = list.get(0);
+
+				vid.setVideoId(id);
+				vid.setActive(active);
+				vid.setDescription(description);
+				vid.setTitle(title);
+				vid.setViews(views);
+				vid.setCategory(cate);
+
+				// xữ lí upload file
+				String fname = "";
+				String uploadPath = Constant.DIR;
+				File uploadDir = new File(uploadPath);
+				if (!uploadDir.exists()) {
+					uploadDir.mkdir();
+				}
+
+				try {
+					Part part = req.getPart("images1");
+					if (part.getSize() > 0) {
+						String filename = Paths.get(part.getSubmittedFileName()).getFileName().toString();
+						// đổi tên file
+						int index = filename.lastIndexOf(".");
+						String ext = filename.substring(index + 1);
+						fname = System.currentTimeMillis() + "." + ext;
+						// upload file
+						part.write(uploadPath + "/" + fname);
+						// ghi ten file vao data
+						vid.setPoster(fname);
+
+					}
+				} catch (Exception e) {
+					// TODO: handle exception
+					e.printStackTrace();
+				}
+
+				vidService.insert(vid);
+				resp.sendRedirect(req.getContextPath() + "/admin/videos");
+
+			} else if (buttonName.equals("Update")) {
+				Video vid = new Video();
+
+				String id = req.getParameter("videoid");
+				int active = Integer.parseInt(req.getParameter("status"));
+				String description = req.getParameter("description");
+				String title = req.getParameter("videotitle");
+				int views = Integer.parseInt(req.getParameter("views"));
+
 				String categoryname = req.getParameter("categoryname");
 				List<Category> list = cateService.findByCategoryname(categoryname);
 				Category cate = list.get(0);
@@ -84,7 +134,7 @@ public class VideoController extends HttpServlet {
 				vid.setTitle(title);
 				vid.setViews(views);
 				vid.setCategory(cate);
-				
+
 				// xữ lí upload file
 				String fname = "";
 				String uploadPath = Constant.DIR;
@@ -112,12 +162,10 @@ public class VideoController extends HttpServlet {
 					e.printStackTrace();
 				}
 				
-				vidService.insert(vid);
+				vidService.update(vid);
 				resp.sendRedirect(req.getContextPath() + "/admin/videos");
 				
-			}else if(buttonName.equals("Update")) {
-				resp.sendRedirect(req.getContextPath() + "/admin/video/update");
-			}else if(buttonName.equals("Delete")) {
+			} else if (buttonName.equals("Delete")) {
 				String id = req.getParameter("id");
 				try {
 					vidService.delete(id);
@@ -126,7 +174,7 @@ public class VideoController extends HttpServlet {
 					e.printStackTrace();
 				}
 				resp.sendRedirect(req.getContextPath() + "/admin/videos");
-			}else if(buttonName.equals("Reset")) {
+			} else if (buttonName.equals("Reset")) {
 				resp.sendRedirect(req.getContextPath() + "/admin/videos");
 			}
 		}
